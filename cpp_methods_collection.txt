@@ -1,0 +1,1020 @@
+=================================================
+Program: Problem 1: Newton’s Forward Interpolation
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+// Function to calculate factorial (e.g., 3! = 3 * 2 * 1)
+double factorial(int n) {
+    double fact = 1;
+    for (int i = 2; i <= n; i++)
+        fact *= i;
+    return fact;
+}
+
+int main() {
+    int n = 4; // Number of data points
+    double x[] = {1.0, 1.4, 1.8, 2.2};
+    double y[4][4]; // 2D array for the difference table
+
+    // Step 1: Put the given f(x) values in the first column
+    y[0][0] = 3.49;
+    y[1][0] = 4.82;
+    y[2][0] = 5.96;
+    y[3][0] = 6.50;
+
+    // Step 2: Create the Forward Difference Table
+    // Formula: y[i][j] = y[i+1][j-1] - y[i][j-1]
+    for (int j = 1; j < n; j++) {
+        for (int i = 0; i < n - j; i++) {
+            y[i][j] = y[i + 1][j - 1] - y[i][j - 1];
+        }
+    }
+
+    // Step 3: Apply Newton's Forward Formula
+    double value = 1.6; // The value we want to find
+    double sum = y[0][0]; // Start with the first y value
+    double h = x[1] - x[0]; // Difference between x values
+    double u = (value - x[0]) / h; // Calculate u
+    
+    double u_term = 1; // Used to calculate u * (u-1) * (u-2)...
+
+    for (int i = 1; i < n; i++) {
+        u_term = u_term * (u - (i - 1));
+        sum = sum + (u_term * y[0][i]) / factorial(i); // Notice we always use y[0][i] (the top row)
+    }
+
+    cout << "Value at f(1.6) is " << sum << endl;
+    return 0;
+}
+
+
+=================================================
+Program: Problem 2: Newton’s Backward Interpolation
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+// Same factorial function
+double factorial(int n) {
+    double fact = 1;
+    for (int i = 2; i <= n; i++)
+        fact *= i;
+    return fact;
+}
+
+int main() {
+    int n = 7; // Number of data points
+    double x[] = {1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3};
+    double y[7][7]; // 2D array for the difference table
+
+    // Step 1: Put the given f(x) values in the first column
+    y[0][0] = 5.474;
+    y[1][0] = 6.050;
+    y[2][0] = 6.686;
+    y[3][0] = 7.389;
+    y[4][0] = 8.166;
+    y[5][0] = 9.025;
+    y[6][0] = 9.974;
+
+    // Step 2: Create the Difference Table (Exactly the same code as Forward!)
+    for (int j = 1; j < n; j++) {
+        for (int i = 0; i < n - j; i++) {
+            y[i][j] = y[i + 1][j - 1] - y[i][j - 1];
+        }
+    }
+
+    // Step 3: Apply Newton's BACKWARD Formula
+    double value = 2.25; // The value we want to find
+    double sum = y[n - 1][0]; // Start with the LAST y value
+    double h = x[1] - x[0];
+    double u = (value - x[n - 1]) / h; // Calculate u using the LAST x value (2.3)
+    
+    double u_term = 1;
+
+    for (int i = 1; i < n; i++) {
+        u_term = u_term * (u + (i - 1)); // Notice the PLUS sign for Backward
+        sum = sum + (u_term * y[n - 1 - i][i]) / factorial(i); // Notice we take from the BOTTOM of the table
+    }
+
+    cout << "Value at f(2.25) is " << sum << endl;
+    return 0;
+}
+
+
+=================================================
+Program: 2. Simple C++ Code
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+// This is the given equation: f(x) = 1 / (1 + x^2)
+double f(double x) {
+    return 1.0 / (1.0 + x * x);
+}
+
+int main() {
+    // Limits of integration
+    double a = 0.0; // Lower limit
+    double b = 1.0; // Upper limit
+    int n = 6;      // Number of intervals (Must be a multiple of 3 for Simp 3/8)
+    
+    // Calculate h (step size/width of each slice)
+    double h = (b - a) / n;
+
+    // ---------------------------------------------------------
+    // 1. TRAPEZOIDAL RULE
+    // ---------------------------------------------------------
+    double trap_sum = f(a) + f(b); // Add first and last values
+    
+    for (int i = 1; i < n; i++) {
+        double x = a + i * h; // Find the current x
+        trap_sum = trap_sum + 2 * f(x); // Multiply middle terms by 2
+    }
+    double trap_ans = (h / 2.0) * trap_sum;
+
+    // ---------------------------------------------------------
+    // 2. SIMPSON'S 3/8 RULE
+    // ---------------------------------------------------------
+    double simp_sum = f(a) + f(b); // Add first and last values
+    
+    for (int i = 1; i < n; i++) {
+        double x = a + i * h; // Find the current x
+        
+        if (i % 3 == 0) {
+            simp_sum = simp_sum + 2 * f(x); // If index is multiple of 3, multiply by 2
+        } else {
+            simp_sum = simp_sum + 3 * f(x); // Otherwise, multiply by 3
+        }
+    }
+    double simp_ans = (3.0 * h / 8.0) * simp_sum;
+
+    // ---------------------------------------------------------
+    // OUTPUT
+    // ---------------------------------------------------------
+    cout << "Exact Value of PI/4 is roughly: 0.785398" << endl << endl;
+    cout << "Trapezoidal Rule Result: " << trap_ans << endl;
+    cout << "Simpson's 3/8 Rule Result: " << simp_ans << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code 1: Trapezoidal Rule Only
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+// The function we are integrating: f(x) = 1 / (1 + x^2)
+double f(double x) {
+    return 1.0 / (1.0 + x * x);
+}
+
+int main() {
+    double a = 0.0; // Lower limit
+    double b = 1.0; // Upper limit
+    int n = 6;      // Number of intervals (can be any number, 6 is a good choice)
+    
+    // Calculate h (step size)
+    double h = (b - a) / n;
+
+    // Step 1: Add the first and last terms
+    double sum = f(a) + f(b); 
+    
+    // Step 2: Loop for the middle terms
+    for (int i = 1; i < n; i++) {
+        double x = a + i * h;       // Find current x
+        sum = sum + 2.0 * f(x);     // In Trapezoidal, multiply all middle terms by 2
+    }
+    
+    // Step 3: Multiply by h/2
+    double ans = (h / 2.0) * sum;
+
+    // Output the result
+    cout << "--- TRAPEZOIDAL RULE ---" << endl;
+    cout << "Calculated Value: " << ans << endl;
+    cout << "Exact Value (PI/4): 0.785398" << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code 2: Simpson's 3/8 Rule Only
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+// The function we are integrating: f(x) = 1 / (1 + x^2)
+double f(double x) {
+    return 1.0 / (1.0 + x * x);
+}
+
+int main() {
+    double a = 0.0; // Lower limit
+    double b = 1.0; // Upper limit
+    int n = 6;      // Number of intervals MUST be a multiple of 3 (like 3, 6, 9)
+    
+    // Calculate h (step size)
+    double h = (b - a) / n;
+
+    // Step 1: Add the first and last terms
+    double sum = f(a) + f(b); 
+    
+    // Step 2: Loop for the middle terms
+    for (int i = 1; i < n; i++) {
+        double x = a + i * h; // Find current x
+        
+        // If the position is a multiple of 3, multiply by 2
+        if (i % 3 == 0) {
+            sum = sum + 2.0 * f(x);
+        } 
+        // Otherwise, multiply by 3
+        else {
+            sum = sum + 3.0 * f(x);
+        }
+    }
+    
+    // Step 3: Multiply by 3h/8
+    double ans = (3.0 * h / 8.0) * sum;
+
+    // Output the result
+    cout << "--- SIMPSON'S 3/8 RULE ---" << endl;
+    cout << "Calculated Value: " << ans << endl;
+    cout << "Exact Value (PI/4): 0.785398" << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: C++ Code (Separate, Clean, Easy to Understand)
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 3; // Number of equations (and unknowns)
+    
+    // Augmented Matrix: [A|b]
+    // Row 0: 1x + 1y + 1z = 6
+    // Row 1: 2x + 3y + 1z = 11
+    // Row 2: 1x + 2y + 3z = 14
+    double a[3][4] = {
+        {1, 1, 1, 6},
+        {2, 3, 1, 11},
+        {1, 2, 3, 14}
+    };
+
+    // ========================================
+    // GAUSS-JORDAN ELIMINATION
+    // ========================================
+    
+    // Step 1: Forward Elimination (Make upper triangle zeros)
+    for (int i = 0; i < n; i++) {
+        // Make diagonal element = 1 (if it's not already)
+        double diag = a[i][i];
+        for (int j = 0; j <= n; j++) {
+            a[i][j] = a[i][j] / diag;
+        }
+        
+        // Make all elements BELOW the diagonal = 0
+        for (int k = 0; k < n; k++) {
+            if (k != i) {
+                double factor = a[k][i];
+                for (int j = 0; j <= n; j++) {
+                    a[k][j] = a[k][j] - factor * a[i][j];
+                }
+            }
+        }
+    }
+
+    // ========================================
+    // OUTPUT THE RESULTS
+    // ========================================
+    cout << "Solution using Gauss-Jordan Method:" << endl << endl;
+    cout << "x = " << a[0][3] << endl;
+    cout << "y = " << a[1][3] << endl;
+    cout << "z = " << a[2][3] << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: 2. Simple C++ Code
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 3; // We have 3 equations (and 3 variables: x, y, z)
+    
+    // Creating the Augmented Matrix based on the given problem
+    // The last column is the right side of the equals sign (6, 11, 14)
+    double matrix[3][4] = {
+        {1.0, 1.0, 1.0, 6.0},
+        {2.0, 3.0, 1.0, 11.0},
+        {1.0, 2.0, 3.0, 14.0}
+    };
+
+    // --- GAUSS-JORDAN LOGIC ---
+    // Loop through every row to make the diagonal elements the "pivot"
+    for (int i = 0; i < n; i++) {
+        
+        // Loop through every OTHER row to make the non-diagonal elements Zero
+        for (int j = 0; j < n; j++) {
+            
+            if (i != j) { // We skip the diagonal element itself
+                
+                // Find the multiplier (ratio) to make the element zero
+                double ratio = matrix[j][i] / matrix[i][i];
+                
+                // Apply the row operation: R_j = R_j - (ratio * R_i)
+                for (int k = 0; k < n + 1; k++) {
+                    matrix[j][k] = matrix[j][k] - (ratio * matrix[i][k]);
+                }
+            }
+        }
+    }
+
+    // --- PRINTING THE ANSWERS ---
+    // The answer is the last column divided by the diagonal element
+    cout << "Solutions:" << endl;
+    cout << "x = " << matrix[0][3] / matrix[0][0] << endl;
+    cout << "y = " << matrix[1][3] / matrix[1][1] << endl;
+    cout << "z = " << matrix[2][3] / matrix[2][2] << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: ✅ C++ Code: Gauss-Jordan Method (Full Step-by-Step)
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+Expected Output:
+Solving system using Gauss-Jordan Elimination:
+Equations:
+x + y + z = 6
+2x + 3y + z = 11
+x + 2y + 3z = 14
+
+Solution:
+x1 = 1
+x2 = 2
+x3 = 3
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 3; // Number of variables/equations
+
+    // Augmented matrix [A | B]
+    double matrix[3][4] = {
+        {1, 1, 1, 6},   // Row 0: x + y + z = 6
+        {2, 3, 1, 11},  // Row 1: 2x + 3y + z = 11
+        {1, 2, 3, 14}   // Row 2: x + 2y + 3z = 14
+    };
+
+    cout << "Solving system using Gauss-Jordan Elimination:" << endl;
+    cout << "Equations:" << endl;
+    cout << "x + y + z = 6" << endl;
+    cout << "2x + 3y + z = 11" << endl;
+    cout << "x + 2y + 3z = 14" << endl << endl;
+
+    // Step 1: Forward elimination with normalization
+    for (int i = 0; i < n; i++) {
+        // Make the diagonal element 1 by dividing the whole row by matrix[i][i]
+        double pivot = matrix[i][i];
+        for (int j = 0; j <= n; j++) {
+            matrix[i][j] /= pivot;
+        }
+
+        // Make all other rows have 0 in column i
+        for (int k = 0; k < n; k++) {
+            if (k != i) { // Skip the pivot row itself
+                double factor = matrix[k][i];
+                for (int j = 0; j <= n; j++) {
+                    matrix[k][j] -= factor * matrix[i][j];
+                }
+            }
+        }
+    }
+
+    // Step 2: Display results
+    cout << "Solution:" << endl;
+    for (int i = 0; i < n; i++) {
+        cout << "x" << i+1 << " = " << matrix[i][n] << endl;
+    }
+
+    return 0;
+}
+
+
+=================================================
+Program: 2. Simple C++ Code
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 3; // 3 equations
+    
+    // The Augmented Matrix
+    double matrix[3][4] = {
+        {2.0,  1.0, -1.0,  1.0},
+        {3.0,  2.0,  1.0, 10.0},
+        {1.0, -1.0,  2.0,  1.0}
+    };
+
+    // ---------------------------------------------------
+    // STEP 1: FORWARD ELIMINATION (Make zeros BELOW diagonal)
+    // ---------------------------------------------------
+    for (int i = 0; i < n; i++) {
+        // Notice j starts from i + 1 (we ONLY look at rows BELOW i)
+        for (int j = i + 1; j < n; j++) {
+            
+            // Find the multiplier
+            double ratio = matrix[j][i] / matrix[i][i];
+            
+            // Apply row operation
+            for (int k = 0; k < n + 1; k++) {
+                matrix[j][k] = matrix[j][k] - (ratio * matrix[i][k]);
+            }
+        }
+    }
+
+    // ---------------------------------------------------
+    // STEP 2: BACK SUBSTITUTION (Find z, then y, then x)
+    // ---------------------------------------------------
+    double ans[3]; // Array to store our answers for x, y, and z
+
+    // Start from the bottom row (n-1) and go backwards to row 0
+    for (int i = n - 1; i >= 0; i--) {
+        ans[i] = matrix[i][n]; // Start with the number on the right side of the equals sign
+        
+        // Subtract the other variables that we already found
+        for (int j = i + 1; j < n; j++) {
+            ans[i] = ans[i] - (matrix[i][j] * ans[j]);
+        }
+        
+        // Divide by the diagonal element
+        ans[i] = ans[i] / matrix[i][i]; 
+    }
+
+    // --- PRINTING THE ANSWERS ---
+    cout << "--- Gauss Elimination Solutions ---" << endl;
+    cout << "x = " << ans[0] << endl;
+    cout << "y = " << ans[1] << endl;
+    cout << "z = " << ans[2] << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: The C++ Code for this exact problem
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+Expected Output:
+--- Final Answers ---
+x = -0.2
+y = 4
+z = 2.6
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+using namespace std;
+
+int main() {
+    int n = 3; // We have 3 equations
+    
+    // Step 1: Put your exact equations into the matrix
+    // 2x +  y -  z = 1
+    // 3x + 2y +  z = 10
+    //  x -  y + 2z = 1
+    double matrix[3][4] = {
+        {2.0,  1.0, -1.0,  1.0},
+        {3.0,  2.0,  1.0, 10.0},
+        {1.0, -1.0,  2.0,  1.0}
+    };
+
+    // Step 2: FORWARD ELIMINATION (Make numbers below the diagonal zero)
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            
+            // Calculate the ratio to multiply by
+            double ratio = matrix[j][i] / matrix[i][i];
+            
+            // Subtract the top row from the bottom row
+            for (int k = 0; k < n + 1; k++) {
+                matrix[j][k] = matrix[j][k] - (ratio * matrix[i][k]);
+            }
+        }
+    }
+
+    // Step 3: BACK SUBSTITUTION (Find z, then y, then x)
+    double ans[3]; // This will hold our answers for x, y, and z
+
+    for (int i = n - 1; i >= 0; i--) {
+        ans[i] = matrix[i][n]; // Start with the right side of the equals sign
+        
+        for (int j = i + 1; j < n; j++) {
+            ans[i] = ans[i] - (matrix[i][j] * ans[j]); // Move knowns to the other side
+        }
+        
+        ans[i] = ans[i] / matrix[i][i]; // Divide by the coefficient to get the final variable
+    }
+
+    // Step 4: PRINT THE ANSWERS
+    cout << "--- Final Answers ---" << endl;
+    cout << "x = " << ans[0] << endl;
+    cout << "y = " << ans[1] << endl;
+    cout << "z = " << ans[2] << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code 1: Evaluate f(x)=tan(x)+tanh(x)
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+#include <cmath> // Needed for tan() and tanh()
+using namespace std;
+
+// The function we want to solve
+double f(double x) {
+    return tan(x) + tanh(x);
+}
+
+int main() {
+    // Starting guesses (one gives negative result, one gives positive)
+    double a = 2.0; 
+    double b = 3.0; 
+    double c; // This will hold our root
+
+    // Quick check to make sure our guesses are valid
+    if (f(a) * f(b) >= 0) {
+        cout << "Incorrect starting guesses!" << endl;
+        return 0;
+    }
+
+    // Regula Falsi Loop (running 15 times is usually enough to get a very accurate answer)
+    for (int i = 0; i < 15; i++) {
+        
+        // The Regula Falsi Formula
+        c = (a * f(b) - b * f(a)) / (f(b) - f(a));
+
+        // If we magically hit exactly zero, stop!
+        if (f(c) == 0.0) {
+            break; 
+        }
+        
+        // Update rules: Replace the side that has the same sign as f(c)
+        else if (f(c) * f(a) < 0) {
+            b = c; // The root is between a and c
+        } 
+        else {
+            a = c; // The root is between c and b
+        }
+    }
+
+    // Output the result
+    cout << "--- Regula Falsi for tan(x) + tanh(x) ---" << endl;
+    cout << "The root is approximately: " << c << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code 2: Evaluate f(x)=xlog10​(x)−1.2
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+#include <cmath> // Needed for log10()
+using namespace std;
+
+// The function we want to solve
+double f(double x) {
+    // Note: log10(x) is base-10 log. If it was ln(x), we would just use log(x)
+    return (x * log10(x)) - 1.2;
+}
+
+int main() {
+    // Starting guesses
+    double a = 2.0; 
+    double b = 3.0; 
+    double c; // This will hold our root
+
+    // Quick check to make sure our guesses are valid
+    if (f(a) * f(b) >= 0) {
+        cout << "Incorrect starting guesses!" << endl;
+        return 0;
+    }
+
+    // Regula Falsi Loop (15 iterations)
+    for (int i = 0; i < 15; i++) {
+        
+        // The Regula Falsi Formula (EXACTLY the same as before!)
+        c = (a * f(b) - b * f(a)) / (f(b) - f(a));
+
+        if (f(c) == 0.0) {
+            break; 
+        }
+        
+        // Update rules
+        else if (f(c) * f(a) < 0) {
+            b = c; // Replace b
+        } 
+        else {
+            a = c; // Replace a
+        }
+    }
+
+    // Output the result
+    cout << "--- Regula Falsi for x*log10(x) - 1.2 ---" << endl;
+    cout << "The root is approximately: " << c << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code A: Root of xsin(x)+cos(x)=0
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+#include <cmath>   // Needed for sin(), cos(), and abs()
+#include <iomanip> // Needed to print exactly 3 decimal places
+using namespace std;
+
+// The original function
+double f(double x) {
+    return (x * sin(x)) + cos(x);
+}
+
+// The derivative function: f'(x)
+double df(double x) {
+    return x * cos(x);
+}
+
+int main() {
+    double x0 = 3.0; // Our initial guess (near PI is a good guess here)
+    double x1;       // This will hold our new guess
+
+    // Loop to apply Newton-Raphson Formula
+    for (int i = 0; i < 20; i++) {
+        
+        // The Newton-Raphson Formula
+        x1 = x0 - (f(x0) / df(x0));
+
+        // Stop if the difference between guesses is extremely small (accurate to 3 decimals)
+        if (abs(x1 - x0) < 0.0001) {
+            break; 
+        }
+
+        // Update the old guess with the new better guess
+        x0 = x1; 
+    }
+
+    // Print the result rounded to exactly 3 decimal places
+    cout << "--- Newton Raphson for x*sin(x) + cos(x) ---" << endl;
+    cout << "Root is: " << fixed << setprecision(3) << x1 << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code B: Evaluate (43)1/5
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+Output Manipulation) forces C++ to print exactly 3 numbers after the decimal dot (e.g., 2.122 instead of just 2.12165...).
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+#include <cmath>   // Needed for pow() and abs()
+#include <iomanip> // Needed for setprecision()
+using namespace std;
+
+// The function we derived: x^5 - 43
+double f(double x) {
+    return pow(x, 5) - 43.0;
+}
+
+// The derivative: 5x^4
+double df(double x) {
+    return 5.0 * pow(x, 4);
+}
+
+int main() {
+    // Initial guess. (Since 2^5 = 32, the answer is close to 2!)
+    double x0 = 2.0; 
+    double x1;       
+
+    // Loop to apply Newton-Raphson Formula
+    for (int i = 0; i < 20; i++) {
+        
+        // The Newton-Raphson Formula (SAME AS ABOVE!)
+        x1 = x0 - (f(x0) / df(x0));
+
+        // Stop when accurate to 3 decimal places
+        if (abs(x1 - x0) < 0.0001) {
+            break; 
+        }
+
+        // Update guess
+        x0 = x1; 
+    }
+
+    // Print the result rounded to exactly 3 decimal places
+    cout << "--- Newton Raphson for 43^(1/5) ---" << endl;
+    cout << "Answer is: " << fixed << setprecision(3) << x1 << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: 2. The C++ Code
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+#include <cmath> // Needed for log() which is ln() in C++
+using namespace std;
+
+// The differential equation: dy/dx = ln(x + y)
+double f(double x, double y) {
+    return log(x + y); // Remember: log() in C++ is the natural log (ln)
+}
+
+// Function to perform Runge-Kutta 4th Order
+double rk4(double x0, double y0, double x_target, double h) {
+    double x = x0;
+    double y = y0;
+
+    // Loop until x reaches our target (0.3)
+    // We add 0.0001 to avoid floating point math errors skipping the last step
+    while (x < x_target - 0.0001) {
+        
+        // Calculate the 4 slopes (k1, k2, k3, k4)
+        double k1 = h * f(x, y);
+        double k2 = h * f(x + (h / 2.0), y + (k1 / 2.0));
+        double k3 = h * f(x + (h / 2.0), y + (k2 / 2.0));
+        double k4 = h * f(x + h, y + k3);
+
+        // Update y using the weighted average of the slopes
+        y = y + (1.0 / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
+        
+        // Move x forward by step size h
+        x = x + h; 
+    }
+    
+    return y;
+}
+
+int main() {
+    // Initial Conditions: y(0) = 2
+    double x0 = 0.0;
+    double y0 = 2.0;
+    double x_target = 0.3; // The x value we want to find y for
+
+    // ---------------------------------------------------
+    // Case 1: 1 Step Method (h = 0.3)
+    // ---------------------------------------------------
+    double h1 = 0.3; // Going from 0 straight to 0.3 in one jump
+    double y1 = rk4(x0, y0, x_target, h1);
+
+    // ---------------------------------------------------
+    // Case 2: 2 Step Method (h = 0.15)
+    // ---------------------------------------------------
+    double h2 = 0.15; // Going from 0 -> 0.15 -> 0.3 (Two jumps)
+    double y2 = rk4(x0, y0, x_target, h2);
+
+    // --- PRINTING AND COMPARING ---
+    cout << "--- Runge-Kutta 4th Order Results ---" << endl;
+    cout << "Result with 1 Step  (h = 0.3):  y = " << y1 << endl;
+    cout << "Result with 2 Steps (h = 0.15): y = " << y2 << endl;
+    
+    cout << "\n--- Comparison ---" << endl;
+    cout << "The 2-step method gives slightly different result." << endl;
+    cout << "The 2-step method is MORE ACCURATE because making the" << endl;
+    cout << "step size (h) smaller reduces the mathematical error." << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code 1: Evaluate f(x)=x4+2x3−x−1
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+#include <cmath> // Needed for pow() and abs()
+using namespace std;
+
+// The function we want to solve: x^4 + 2x^3 - x - 1
+double f(double x) {
+    return pow(x, 4) + 2.0 * pow(x, 3) - x - 1.0;
+}
+
+int main() {
+    // Starting guesses
+    double a = 0.0; // f(0) is negative
+    double b = 1.0; // f(1) is positive
+    double c;       // This will hold our root
+
+    // Quick check to make sure our guesses have opposite signs
+    if (f(a) * f(b) >= 0) {
+        cout << "Incorrect starting guesses!" << endl;
+        return 0;
+    }
+
+    // Bisection Loop (We run it until the gap between 'a' and 'b' is very small)
+    while (abs(b - a) >= 0.001) {
+        
+        // BISECTION FORMULA: Just find the middle point!
+        c = (a + b) / 2.0;
+
+        // If we magically hit exactly zero, stop!
+        if (f(c) == 0.0) {
+            break; 
+        }
+        
+        // Update rules: Replace the side that has the same sign as f(c)
+        else if (f(c) * f(a) < 0) {
+            b = c; // The root is between a and c
+        } 
+        else {
+            a = c; // The root is between c and b
+        }
+    }
+
+    // Output the result
+    cout << "--- Bisection Method for x^4 + 2x^3 - x - 1 ---" << endl;
+    cout << "The root is approximately: " << c << endl;
+
+    return 0;
+}
+
+
+=================================================
+Program: Code 2: Evaluate f(x)=xex−1=0
+=================================================
+
+// --- EXPECTED INPUT & OUTPUT ---
+/*
+See code comments for specific outputs/inputs.
+*/
+
+// --- C++ CODE ---
+#include <iostream>
+#include <cmath> // Needed for exp() and abs()
+using namespace std;
+
+// The function we want to solve: x*e^x - 1
+double f(double x) {
+    // Note: In C++, e^x is written as exp(x)
+    return (x * exp(x)) - 1.0;
+}
+
+int main() {
+    // Starting guesses
+    double a = 0.0; // f(0) is negative
+    double b = 1.0; // f(1) is positive
+    double c;       // This will hold our root
+
+    // Quick check to make sure our guesses have opposite signs
+    if (f(a) * f(b) >= 0) {
+        cout << "Incorrect starting guesses!" << endl;
+        return 0;
+    }
+
+    // Bisection Loop 
+    while (abs(b - a) >= 0.001) {
+        
+        // BISECTION FORMULA
+        c = (a + b) / 2.0;
+
+        if (f(c) == 0.0) {
+            break; 
+        }
+        
+        // Update rules
+        else if (f(c) * f(a) < 0) {
+            b = c; // Replace b with c
+        } 
+        else {
+            a = c; // Replace a with c
+        }
+    }
+
+    // Output the result
+    cout << "--- Bisection Method for x*e^x - 1 ---" << endl;
+    cout << "The root is approximately: " << c << endl;
+
+    return 0;
+}
+
